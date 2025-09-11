@@ -1,0 +1,38 @@
+{
+  "app": {
+    "title": "Patient App",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "nav": {
+    "events": "Events",
+    "submitIssue": "Submit Issue",
+    "reports": "Reports",
+    "videoCall": "Video Call",
+    "settings": "Settings"
+  },
+  "events": {
+    "empty": "No upcoming events"
+  },
+  "submit": {
+    "title": "Describe your issue",
+    "placeholder": "Type your issue...",
+    "record": "Record Audio",
+    "stop": "Stop",
+    "submit": "Submit",
+    "queued": "Saved offline. Will submit when online.",
+    "sent": "Submitted successfully"
+  },
+  "reports": {
+    "title": "Medical Reports",
+    "empty": "No reports available"
+  },
+  "video": {
+    "incoming": "Incoming call from doctor",
+    "open": "Open Call"
+  }
+}
+
+
