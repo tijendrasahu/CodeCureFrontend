@@ -86,12 +86,12 @@ function InnerTabs() {
         },
       })}
     >
-      <Tabs.Screen name="index" options={{ title: 'Events' }} />
-      <Tabs.Screen name="submit" options={{ title: 'Submit Issue' }} />
-      <Tabs.Screen name="reports" options={{ title: 'Reports' }} />
-      <Tabs.Screen name="ai-assistance" options={{ title: 'AI Assistant' }} />
-      <Tabs.Screen name="video" options={{ title: 'Video Call' }} />
-      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+      <Tabs.Screen name="index" options={{ title: t('nav.events') }} />
+      <Tabs.Screen name="submit" options={{ title: t('nav.submitIssue') }} />
+      <Tabs.Screen name="reports" options={{ title: t('nav.reports') }} />
+      <Tabs.Screen name="ai-assistance" options={{ title: t('nav.aiAssistant') }} />
+      <Tabs.Screen name="video" options={{ title: t('nav.videoCall') }} />
+      <Tabs.Screen name="settings" options={{ title: t('nav.settings') }} />
       {/* Hidden profile route; navigable via header avatar */}
       <Tabs.Screen name="profile" options={{ href: null, title: 'Profile' }} />
     </Tabs>

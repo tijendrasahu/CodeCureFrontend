@@ -10,11 +10,29 @@
     "events": "Events",
     "submitIssue": "Submit Issue",
     "reports": "Reports",
+    "aiAssistant": "AI Assistant",
     "videoCall": "Video Call",
     "settings": "Settings"
   },
   "events": {
-    "empty": "No upcoming events"
+    "empty": "No upcoming events",
+    "items": {
+      "health_camp": {
+        "title": "Health Camp - City Center",
+        "description": "A comprehensive health camp offering free medical checkups, blood pressure monitoring, diabetes screening, and basic health consultations. Qualified doctors and medical professionals will be available throughout the day.",
+        "services": ["Blood Pressure Check", "Diabetes Screening", "General Consultation", "Health Education"]
+      },
+      "checkup": {
+        "title": "Free Checkup - Community Hall",
+        "description": "Free health checkup camp organized by local medical practitioners. Includes basic health screening, consultation with doctors, and health awareness sessions.",
+        "services": ["General Health Check", "Eye Examination", "Dental Checkup", "Nutrition Counseling"]
+      },
+      "vaccination": {
+        "title": "Vaccination Drive",
+        "description": "Mass vaccination drive for COVID-19 booster shots and routine immunizations. Safe and efficient vaccination process with proper medical supervision.",
+        "services": ["COVID-19 Booster", "Flu Vaccination", "Child Immunization", "Travel Vaccines"]
+      }
+    }
   },
   "submit": {
     "title": "Describe your issue",
@@ -27,7 +45,13 @@
   },
   "reports": {
     "title": "Medical Reports",
-    "empty": "No reports available"
+    "empty": "No reports available",
+    "files": {
+      "bloodTest": "Blood Test Report.pdf",
+      "chestXray": "Chest X-Ray.png",
+      "mriScan": "MRI Scan Report.pdf",
+      "ecg": "ECG Report.pdf"
+    }
   },
   "video": {
     "incoming": "Incoming call from doctor",

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FlatList, Text, View, StyleSheet, TouchableOpacity, ScrollView, Modal, Dimensions, Animated, Easing, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { t } from '../../src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { Video, ResizeMode } from 'expo-av';
@@ -285,7 +286,7 @@ export default function EventsScreen() {
             />
           </LinearGradient>
           <View style={{ flex: 1 }}>
-            <Text style={styles.eventTitle}>{item.title}</Text>
+            <Text style={styles.eventTitle}>{t(`events.items.${item.type}.title`)}</Text>
             <Text style={styles.eventDate}>{item.date}</Text>
           </View>
         </View>
@@ -302,8 +303,8 @@ export default function EventsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Upcoming Events</Text>
-        <Text style={styles.subtitle}>Stay updated with health events</Text>
+        <Text style={styles.title}>{t('nav.events')}</Text>
+        <Text style={styles.subtitle}>{t('events.empty')}</Text>
       </View>
       
       <FlatList
@@ -328,8 +329,8 @@ export default function EventsScreen() {
             <View style={styles.emptyIcon}>
               <Ionicons name="calendar-outline" size={40} color={theme.colors.muted} />
             </View>
-            <Text style={styles.emptyText}>No upcoming events</Text>
-            <Text style={styles.emptySubtext}>Check back later for new health events</Text>
+            <Text style={styles.emptyText}>{t('events.empty')}</Text>
+            <Text style={styles.emptySubtext}>{t('events.empty')}</Text>
           </View>
         }
       />
@@ -353,7 +354,7 @@ export default function EventsScreen() {
                   color="#ffffff" 
                 />
               </LinearGradient>
-              <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
+              <Text style={styles.modalTitle}>{selectedEvent ? t(`events.items.${selectedEvent.type}.title`) : ''}</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={() => setModalVisible(false)}
@@ -375,15 +376,15 @@ export default function EventsScreen() {
               
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Description</Text>
-                <Text style={styles.detailValue}>{selectedEvent?.description}</Text>
+                <Text style={styles.detailValue}>{selectedEvent ? t(`events.items.${selectedEvent.type}.description`) : ''}</Text>
               </View>
               
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Services Offered</Text>
                 <View style={styles.servicesList}>
-                  {selectedEvent?.services?.map((service: string, index: number) => (
+                  {(selectedEvent?.services || []).map((service: string, index: number) => (
                     <View key={index} style={styles.serviceTag}>
-                      <Text style={styles.serviceText}>{service}</Text>
+                      <Text style={styles.serviceText}>{t(`events.items.${selectedEvent?.type}.services.${index}`)}</Text>
                     </View>
                   ))}
                 </View>

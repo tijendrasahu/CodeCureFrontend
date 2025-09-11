@@ -264,14 +264,14 @@ export default function SubmitIssueScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <AppLogo size="medium" />
-        <Text style={styles.title}>Submit Issue</Text>
-        <Text style={styles.subtitle}>Report your health concerns or questions</Text>
+        <Text style={styles.title}>{t('submit.title')}</Text>
+        <Text style={styles.subtitle}>{t('submit.title')}</Text>
       </View>
       
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.textInputContainer}>
           <TextInput
-            placeholder="Describe your health concern or question..."
+            placeholder={t('submit.placeholder')}
             placeholderTextColor={theme.colors.muted}
             value={text}
             onChangeText={setText}
@@ -281,7 +281,7 @@ export default function SubmitIssueScreen() {
         </View>
 
         <View style={styles.recordingSection}>
-          <Text style={styles.recordingTitle}>Voice Recording</Text>
+          <Text style={styles.recordingTitle}>{t('submit.record')}</Text>
           
           <View style={styles.recordingControls}>
             {isRecording ? (
@@ -289,7 +289,7 @@ export default function SubmitIssueScreen() {
                 <Text style={styles.durationText}>{formatDuration(recordingDuration)}</Text>
                 <TouchableOpacity style={styles.stopButton} onPress={stopRecording}>
                   <Ionicons name="stop" size={20} color="#ffffff" />
-                  <Text style={styles.stopButtonText}>Stop</Text>
+                  <Text style={styles.stopButtonText}>{t('submit.stop')}</Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -299,7 +299,7 @@ export default function SubmitIssueScreen() {
                 </Text>
                 <TouchableOpacity style={styles.recordButton} onPress={startRecording}>
                   <Ionicons name="mic" size={20} color="#ffffff" />
-                  <Text style={styles.recordButtonText}>Record</Text>
+                  <Text style={styles.recordButtonText}>{t('submit.record')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -324,7 +324,7 @@ export default function SubmitIssueScreen() {
           onPress={handleSubmit}
           disabled={!text.trim() && !hasAudio}
         >
-          <Text style={styles.submitButtonText}>Submit Issue</Text>
+          <Text style={styles.submitButtonText}>{t('submit.submit')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

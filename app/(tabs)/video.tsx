@@ -12,7 +12,7 @@ export default function VideoScreen() {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       {!open ? (
         <View style={{ padding: 16 }}>
-          <Button title="Open Call" onPress={() => setOpen(true)} />
+          <Button title={t('video.open')} onPress={() => setOpen(true)} />
         </View>
       ) : (
         <WebView

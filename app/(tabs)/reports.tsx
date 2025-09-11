@@ -9,7 +9,7 @@ import { AppLogo } from '../../src/components/AppLogo';
 const mockReports = [
   { 
     id: 'r1', 
-    name: 'Blood Test Report.pdf', 
+    name: 'reports.files.bloodTest', 
     url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     type: 'pdf',
     date: '2024-01-15',
@@ -17,7 +17,7 @@ const mockReports = [
   },
   { 
     id: 'r2', 
-    name: 'Chest X-Ray.png', 
+    name: 'reports.files.chestXray', 
     url: 'https://via.placeholder.com/800x600/4A90E2/FFFFFF?text=Chest+X-Ray',
     type: 'image',
     date: '2024-01-10',
@@ -25,7 +25,7 @@ const mockReports = [
   },
   { 
     id: 'r3', 
-    name: 'MRI Scan Report.pdf', 
+    name: 'reports.files.mriScan', 
     url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     type: 'pdf',
     date: '2024-01-08',
@@ -33,7 +33,7 @@ const mockReports = [
   },
   { 
     id: 'r4', 
-    name: 'ECG Report.pdf', 
+    name: 'reports.files.ecg', 
     url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     type: 'pdf',
     date: '2024-01-05',
@@ -220,8 +220,8 @@ export default function ReportsScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <AppLogo size="medium" />
-        <Text style={styles.title}>Medical Reports</Text>
-        <Text style={styles.subtitle}>View and download your medical reports</Text>
+        <Text style={styles.title}>{t('reports.title')}</Text>
+        <Text style={styles.subtitle}>{t('app.title')}</Text>
       </View>
       
       <FlatList
@@ -243,7 +243,7 @@ export default function ReportsScreen() {
                   />
                 </View>
                 <View style={styles.reportInfo}>
-                  <Text style={styles.reportName}>{item.name}</Text>
+                  <Text style={styles.reportName}>{t(item.name)}</Text>
                   <Text style={styles.reportMeta}>{item.date} • {item.size}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
@@ -257,8 +257,8 @@ export default function ReportsScreen() {
             <View style={styles.emptyIcon}>
               <Ionicons name="document-outline" size={40} color={theme.colors.muted} />
             </View>
-            <Text style={styles.emptyText}>No reports available</Text>
-            <Text style={styles.emptySubtext}>Your medical reports will appear here</Text>
+            <Text style={styles.emptyText}>{t('reports.empty')}</Text>
+            <Text style={styles.emptySubtext}>{t('app.title')}</Text>
           </View>
         }
       />

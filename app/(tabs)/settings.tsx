@@ -147,12 +147,12 @@ export default function SettingsScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <AppLogo size="medium" />
-          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.title}>{t('nav.settings')}</Text>
           <Text style={styles.subtitle}>Customize your experience</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Language</Text>
+          <Text style={styles.sectionTitle}>{t('app.language')}</Text>
           {languages.map((option) => (
             <TouchableOpacity
               key={option.value}
@@ -174,13 +174,13 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Appearance</Text>
+          <Text style={styles.sectionTitle}>{t('app.theme')}</Text>
           <View style={styles.settingItem}>
             <View style={styles.settingIcon}>
               <Ionicons name="moon" size={20} color={theme.colors.primary} />
             </View>
             <View style={styles.settingContent}>
-              <Text style={styles.settingTitle}>Dark Mode</Text>
+              <Text style={styles.settingTitle}>{t('app.dark')}</Text>
               <Text style={styles.settingSubtitle}>Switch between light and dark themes</Text>
             </View>
             <Switch 
