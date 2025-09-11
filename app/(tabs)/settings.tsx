@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Switch, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { setLocale, t, type SupportedLocale } from '../../src/i18n';
+import { setLocale, t, type SupportedLocale, subscribeToLocale } from '../../src/i18n';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -10,6 +10,10 @@ import { AppLogo } from '../../src/components/AppLogo';
 export default function SettingsScreen() {
   const { theme, mode, setMode } = useTheme();
   const [lang, setLang] = React.useState<SupportedLocale>('en');
+  React.useEffect(() => {
+    const unsub = subscribeToLocale((loc) => setLang(loc));
+    return unsub;
+  }, []);
 
   const languages = [
     { label: 'English', value: 'en' as SupportedLocale, flag: '🇺🇸' },
@@ -153,7 +157,6 @@ export default function SettingsScreen() {
             <TouchableOpacity
               key={option.value}
               onPress={() => {
-                setLang(option.value);
                 setLocale(option.value);
               }}
               style={[

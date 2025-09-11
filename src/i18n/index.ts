@@ -22,6 +22,8 @@ export const getSystemLocale = (): SupportedLocale => {
 
 export const setLocale = (locale: SupportedLocale) => {
 	i18n.locale = locale;
+	// Notify subscribers so UI can re-render on locale changes
+	try { localeListeners.forEach((fn) => fn(locale)); } catch {}
 };
 
 // Initialize with system locale
@@ -33,5 +35,13 @@ try {
 }
 
 export const t = (key: string, options?: Record<string, unknown>) => i18n.t(key, options);
+
+// Lightweight subscription to react on locale changes from UI
+type LocaleListener = (locale: SupportedLocale) => void;
+const localeListeners = new Set<LocaleListener>();
+export const subscribeToLocale = (listener: LocaleListener) => {
+	localeListeners.add(listener);
+	return () => localeListeners.delete(listener);
+};
 
 

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { FlatList, Text, View, StyleSheet, TouchableOpacity, ScrollView, Modal, Dimensions } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { FlatList, Text, View, StyleSheet, TouchableOpacity, ScrollView, Modal, Dimensions, Animated, Easing, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
+import { Video, ResizeMode } from 'expo-av';
+import { router } from 'expo-router';
 import { AppLogo } from '../../src/components/AppLogo';
 
 const mockEvents = [
@@ -69,6 +71,8 @@ export default function EventsScreen() {
   const { theme } = useTheme();
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   const styles = StyleSheet.create({
     container: {
@@ -79,6 +83,17 @@ export default function EventsScreen() {
       paddingHorizontal: theme.spacing.lg,
       paddingTop: theme.spacing.lg,
       paddingBottom: theme.spacing.md,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.xs,
+    },
+    headerAvatar: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
     },
     title: {
       fontSize: 28,
@@ -239,13 +254,20 @@ export default function EventsScreen() {
     },
   });
 
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true })
+    ]).start();
+  }, []);
+
   const handleEventPress = (event: any) => {
     setSelectedEvent(event);
     setModalVisible(true);
   };
 
   const renderEvent = ({ item, index }: { item: any; index: number }) => (
-    <View style={styles.eventCard}>
+    <Animated.View style={[styles.eventCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <TouchableOpacity 
         style={styles.eventContent} 
         activeOpacity={0.8}
@@ -274,14 +296,21 @@ export default function EventsScreen() {
           <Ionicons name="location" size={14} color={theme.colors.textSecondary} /> {item.location}
         </Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <AppLogo size="large" />
-        <Text style={styles.title}>Upcoming Events</Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Upcoming Events</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
+            <Image 
+              source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+              style={styles.headerAvatar}
+            />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.subtitle}>Stay updated with health events</Text>
       </View>
       
@@ -290,6 +319,18 @@ export default function EventsScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderEvent}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View style={{ marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.md, borderRadius: theme.borderRadius.lg, overflow: 'hidden' }}>
+            <Video
+              source={{ uri: 'https://www.w3schools.com/html/mov_bbb.mp4' }}
+              style={{ width: '100%', height: 180 }}
+              resizeMode={ResizeMode.COVER}
+              shouldPlay
+              isLooping
+              isMuted
+            />
+          </View>
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIcon}>
