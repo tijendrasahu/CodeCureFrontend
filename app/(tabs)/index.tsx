@@ -314,7 +314,7 @@ export default function EventsScreen() {
         ListHeaderComponent={
           <View style={{ marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.md, borderRadius: theme.borderRadius.lg, overflow: 'hidden' }}>
             <Video
-              source={{ uri: 'https://www.w3schools.com/html/mov_bbb.mp4' }}
+              source={{ uri: 'https://nhm.gov.in/images/video/mhs/HWC.mp4' }}
               style={{ width: '100%', height: 180 }}
               resizeMode={ResizeMode.COVER}
               shouldPlay
