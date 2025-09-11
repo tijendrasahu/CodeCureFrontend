@@ -48,14 +48,36 @@ export default function RegisterScreen() {
     }
     
     setLoading(true);
-    // Simulate API call
-    setTimeout(async () => {
-      setLoading(false);
+    try {
+      const raw = (await AsyncStorage.getItem('app_users_v1')) || '[]';
+      const users = JSON.parse(raw) as Array<any>;
+      const exists = users.some((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (exists) {
+        Alert.alert('Error', 'An account with this email already exists');
+        setLoading(false);
+        return;
+      }
+      const newUser = {
+        id: `u_${Date.now()}`,
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+      };
+      users.push(newUser);
+      await AsyncStorage.setItem('app_users_v1', JSON.stringify(users));
       await AsyncStorage.setItem('user_authenticated', 'true');
+      await AsyncStorage.setItem('current_user_v1', JSON.stringify(newUser));
       Alert.alert('Success', 'Account created successfully!', [
         { text: 'OK', onPress: () => router.replace('/(tabs)') }
       ]);
-    }, 1500);
+    } catch (e) {
+      Alert.alert('Error', 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const styles = StyleSheet.create({

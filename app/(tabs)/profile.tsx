@@ -1,10 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+type User = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+};
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('current_user_v1');
+        if (raw) setUser(JSON.parse(raw));
+      } catch {}
+    })();
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -86,10 +105,10 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <Image source={{ uri: 'https://randomuser.me/api/portraits/women/68.jpg' }} style={styles.avatar} />
+          <Image source={{ uri: user?.avatar || 'https://randomuser.me/api/portraits/men/32.jpg' }} style={styles.avatar} />
           <View>
-            <Text style={styles.name}>John Doe</Text>
-            <Text style={styles.email}>john.doe@example.com</Text>
+            <Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : 'John Doe'}</Text>
+            <Text style={styles.email}>{user?.email || 'john.doe@example.com'}</Text>
           </View>
         </View>
 
@@ -102,7 +121,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Details</Text>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Phone</Text>
-            <Text style={styles.rowValue}>+91 98765 43210</Text>
+            <Text style={styles.rowValue}>{user?.phone || '+91 98765 43210'}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Age</Text>

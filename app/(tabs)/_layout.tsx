@@ -7,9 +7,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppLogo } from '../../src/components/AppLogo';
 import { Image, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
+import { subscribeToLocale } from '../../src/i18n';
 
 function InnerTabs() {
   const { theme } = useTheme();
+  const [localeTick, setLocaleTick] = React.useState(0);
+  React.useEffect(() => {
+    const unsub = subscribeToLocale(() => setLocaleTick((x) => x + 1));
+    return unsub;
+  }, []);
   return (
     <Tabs
       screenOptions={({ route }) => ({
@@ -86,6 +92,8 @@ function InnerTabs() {
       <Tabs.Screen name="ai-assistance" options={{ title: 'AI Assistant' }} />
       <Tabs.Screen name="video" options={{ title: 'Video Call' }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+      {/* Hidden profile route; navigable via header avatar */}
+      <Tabs.Screen name="profile" options={{ href: null, title: 'Profile' }} />
     </Tabs>
   );
 }

@@ -302,15 +302,7 @@ export default function EventsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>Upcoming Events</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-            <Image 
-              source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
-              style={styles.headerAvatar}
-            />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.title}>Upcoming Events</Text>
         <Text style={styles.subtitle}>Stay updated with health events</Text>
       </View>
       

@@ -28,14 +28,26 @@ export default function LoginScreen() {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    
+
     setLoading(true);
-    // Simulate API call
-    setTimeout(async () => {
-      setLoading(false);
+    try {
+      const raw = (await AsyncStorage.getItem('app_users_v1')) || '[]';
+      const users = JSON.parse(raw) as Array<any>;
+      const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      await new Promise((r) => setTimeout(r, 800));
+      if (!user) {
+        Alert.alert('Invalid credentials', 'Please check your email and password');
+        setLoading(false);
+        return;
+      }
       await AsyncStorage.setItem('user_authenticated', 'true');
+      await AsyncStorage.setItem('current_user_v1', JSON.stringify(user));
       router.replace('/(tabs)');
-    }, 1500);
+    } catch (e) {
+      Alert.alert('Error', 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const styles = StyleSheet.create({
