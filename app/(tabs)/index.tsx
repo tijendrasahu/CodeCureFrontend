@@ -1,8 +1,9 @@
-import React from 'react';
-import { FlatList, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { FlatList, Text, View, StyleSheet, TouchableOpacity, ScrollView, Modal, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
+import { AppLogo } from '../../src/components/AppLogo';
 
 const mockEvents = [
   { 
@@ -11,7 +12,12 @@ const mockEvents = [
     date: '2025-09-22',
     time: '9:00 AM - 5:00 PM',
     location: 'City Center Plaza',
-    type: 'health_camp'
+    type: 'health_camp',
+    description: 'A comprehensive health camp offering free medical checkups, blood pressure monitoring, diabetes screening, and basic health consultations. Qualified doctors and medical professionals will be available throughout the day.',
+    services: ['Blood Pressure Check', 'Diabetes Screening', 'General Consultation', 'Health Education'],
+    contact: '+91 98765 43210',
+    organizer: 'City Health Department',
+    requirements: 'Bring valid ID proof and previous medical reports if available'
   },
   { 
     id: '2', 
@@ -19,7 +25,12 @@ const mockEvents = [
     date: '2025-10-01',
     time: '10:00 AM - 3:00 PM',
     location: 'Community Hall',
-    type: 'checkup'
+    type: 'checkup',
+    description: 'Free health checkup camp organized by local medical practitioners. Includes basic health screening, consultation with doctors, and health awareness sessions.',
+    services: ['General Health Check', 'Eye Examination', 'Dental Checkup', 'Nutrition Counseling'],
+    contact: '+91 98765 43211',
+    organizer: 'Community Health Initiative',
+    requirements: 'No prior appointment needed, walk-ins welcome'
   },
   { 
     id: '3', 
@@ -27,7 +38,12 @@ const mockEvents = [
     date: '2025-10-15',
     time: '8:00 AM - 4:00 PM',
     location: 'Medical Center',
-    type: 'vaccination'
+    type: 'vaccination',
+    description: 'Mass vaccination drive for COVID-19 booster shots and routine immunizations. Safe and efficient vaccination process with proper medical supervision.',
+    services: ['COVID-19 Booster', 'Flu Vaccination', 'Child Immunization', 'Travel Vaccines'],
+    contact: '+91 98765 43212',
+    organizer: 'District Health Office',
+    requirements: 'Bring vaccination card and valid ID proof'
   },
 ];
 
@@ -51,6 +67,8 @@ const getEventColor = (type: string, theme: any) => {
 
 export default function EventsScreen() {
   const { theme } = useTheme();
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
@@ -148,11 +166,91 @@ export default function EventsScreen() {
       color: theme.colors.muted,
       textAlign: 'center',
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      margin: theme.spacing.lg,
+      maxHeight: Dimensions.get('window').height * 0.8,
+      width: Dimensions.get('window').width - theme.spacing.xl,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: theme.spacing.lg,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    modalIcon: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: theme.spacing.md,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      flex: 1,
+    },
+    closeButton: {
+      padding: theme.spacing.sm,
+    },
+    modalContent: {
+      padding: theme.spacing.lg,
+    },
+    detailRow: {
+      marginBottom: theme.spacing.md,
+    },
+    detailLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.textSecondary,
+      marginBottom: theme.spacing.xs,
+    },
+    detailValue: {
+      fontSize: 16,
+      color: theme.colors.text,
+    },
+    servicesList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginTop: theme.spacing.xs,
+    },
+    serviceTag: {
+      backgroundColor: theme.colors.primary + '20',
+      paddingHorizontal: theme.spacing.sm,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.sm,
+      marginRight: theme.spacing.sm,
+      marginBottom: theme.spacing.sm,
+    },
+    serviceText: {
+      fontSize: 12,
+      color: theme.colors.primary,
+      fontWeight: '500',
+    },
   });
+
+  const handleEventPress = (event: any) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+  };
 
   const renderEvent = ({ item, index }: { item: any; index: number }) => (
     <View style={styles.eventCard}>
-      <TouchableOpacity style={styles.eventContent} activeOpacity={0.8}>
+      <TouchableOpacity 
+        style={styles.eventContent} 
+        activeOpacity={0.8}
+        onPress={() => handleEventPress(item)}
+      >
         <View style={styles.eventHeader}>
           <LinearGradient
             colors={[getEventColor(item.type, theme), getEventColor(item.type, theme) + '80']}
@@ -182,6 +280,7 @@ export default function EventsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <AppLogo size="large" />
         <Text style={styles.title}>Upcoming Events</Text>
         <Text style={styles.subtitle}>Stay updated with health events</Text>
       </View>
@@ -201,6 +300,80 @@ export default function EventsScreen() {
           </View>
         }
       />
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <LinearGradient
+                colors={[getEventColor(selectedEvent?.type, theme), getEventColor(selectedEvent?.type, theme) + '80']}
+                style={styles.modalIcon}
+              >
+                <Ionicons 
+                  name={getEventIcon(selectedEvent?.type) as any} 
+                  size={30} 
+                  color="#ffffff" 
+                />
+              </LinearGradient>
+              <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Date & Time</Text>
+                <Text style={styles.detailValue}>{selectedEvent?.date} • {selectedEvent?.time}</Text>
+              </View>
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Location</Text>
+                <Text style={styles.detailValue}>{selectedEvent?.location}</Text>
+              </View>
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Description</Text>
+                <Text style={styles.detailValue}>{selectedEvent?.description}</Text>
+              </View>
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Services Offered</Text>
+                <View style={styles.servicesList}>
+                  {selectedEvent?.services?.map((service: string, index: number) => (
+                    <View key={index} style={styles.serviceTag}>
+                      <Text style={styles.serviceText}>{service}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Organizer</Text>
+                <Text style={styles.detailValue}>{selectedEvent?.organizer}</Text>
+              </View>
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Contact</Text>
+                <Text style={styles.detailValue}>{selectedEvent?.contact}</Text>
+              </View>
+              
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Requirements</Text>
+                <Text style={styles.detailValue}>{selectedEvent?.requirements}</Text>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

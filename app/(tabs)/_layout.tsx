@@ -41,6 +41,7 @@ function InnerTabs() {
       <Tabs.Screen name="index" options={{ title: 'Events' }} />
       <Tabs.Screen name="submit" options={{ title: 'Submit Issue' }} />
       <Tabs.Screen name="reports" options={{ title: 'Reports' }} />
+      <Tabs.Screen name="ai-assistance" options={{ title: 'AI Assistant' }} />
       <Tabs.Screen name="video" options={{ title: 'Video Call' }} />
       <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
     </Tabs>

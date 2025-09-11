@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, Switch, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, Switch, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { setLocale, t, type SupportedLocale } from '../../src/i18n';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { AppLogo } from '../../src/components/AppLogo';
 
 export default function SettingsScreen() {
   const { theme, mode, setMode } = useTheme();
@@ -139,58 +140,61 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Customize your experience</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Language</Text>
-        {languages.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            onPress={() => {
-              setLang(option.value);
-              setLocale(option.value);
-            }}
-            style={[
-              styles.languageOption,
-              lang === option.value && styles.selectedLanguage
-            ]}
-          >
-            <Text style={styles.languageFlag}>{option.flag}</Text>
-            <Text style={styles.languageLabel}>{option.label}</Text>
-            {lang === option.value && (
-              <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Appearance</Text>
-        <View style={styles.settingItem}>
-          <View style={styles.settingIcon}>
-            <Ionicons name="moon" size={20} color={theme.colors.primary} />
-          </View>
-          <View style={styles.settingContent}>
-            <Text style={styles.settingTitle}>Dark Mode</Text>
-            <Text style={styles.settingSubtitle}>Switch between light and dark themes</Text>
-          </View>
-          <Switch 
-            value={mode === 'dark'} 
-            onValueChange={(v) => setMode(v ? 'dark' : 'light')}
-            trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-            thumbColor={mode === 'dark' ? '#ffffff' : '#f4f3f4'}
-          />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <AppLogo size="medium" />
+          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.subtitle}>Customize your experience</Text>
         </View>
-      </View>
 
-      <View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Language</Text>
+          {languages.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              onPress={() => {
+                setLang(option.value);
+                setLocale(option.value);
+              }}
+              style={[
+                styles.languageOption,
+                lang === option.value && styles.selectedLanguage
+              ]}
+            >
+              <Text style={styles.languageFlag}>{option.flag}</Text>
+              <Text style={styles.languageLabel}>{option.label}</Text>
+              {lang === option.value && (
+                <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appearance</Text>
+          <View style={styles.settingItem}>
+            <View style={styles.settingIcon}>
+              <Ionicons name="moon" size={20} color={theme.colors.primary} />
+            </View>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingTitle}>Dark Mode</Text>
+              <Text style={styles.settingSubtitle}>Switch between light and dark themes</Text>
+            </View>
+            <Switch 
+              value={mode === 'dark'} 
+              onValueChange={(v) => setMode(v ? 'dark' : 'light')}
+              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              thumbColor={mode === 'dark' ? '#ffffff' : '#f4f3f4'}
+            />
+          </View>
+        </View>
+
+        <View>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
