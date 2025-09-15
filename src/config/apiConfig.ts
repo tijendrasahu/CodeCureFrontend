@@ -11,6 +11,7 @@ export const API_CONFIG = {
     REPORT_DOWNLOAD: '/report/download',
     ISSUE_SUBMIT: '/issue',
     ISSUE_LIST: '/issue/list',
+    AI_PROMPT: '/prompt',
   },
   HEADERS: {
     'Content-Type': 'application/json',

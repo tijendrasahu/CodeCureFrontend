@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { AppLogo } from '../../src/components/AppLogo';
+import { apiService } from '../../src/services/apiService';
 
 interface Message {
   id: string;
@@ -21,21 +22,13 @@ interface Message {
   timestamp: Date;
 }
 
-const mockAIResponses = [
-  "I understand your concern. Based on your symptoms, I recommend consulting with a healthcare professional for proper evaluation.",
-  "That's a common question. Here are some general guidelines you can follow for better health management.",
-  "I can help you understand your medical reports. Please share the specific details you'd like me to explain.",
-  "For medication-related questions, it's important to consult with your doctor or pharmacist for personalized advice.",
-  "I can provide general health information, but remember that I'm not a substitute for professional medical advice.",
-  "Let me help you find relevant health resources and information for your specific situation.",
-];
 
 export default function AIAssistanceScreen() {
   const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I\'m your AI health assistant. How can I help you today?',
+      text: 'नमस्ते! मैं आपका AI स्वास्थ्य सहायक हूं। आज मैं आपकी कैसे मदद कर सकता हूं?\n\nHello! I\'m your AI health assistant. How can I help you today?',
       isUser: false,
       timestamp: new Date(),
     }
@@ -55,6 +48,7 @@ export default function AIAssistanceScreen() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText.trim();
     setInputText('');
     setIsTyping(true);
 
@@ -63,12 +57,13 @@ export default function AIAssistanceScreen() {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const randomResponse = mockAIResponses[Math.floor(Math.random() * mockAIResponses.length)];
+    try {
+      // Call the real AI API
+      const response = await apiService.sendAIPrompt({ prompt: currentInput });
+      
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: randomResponse,
+        text: response.response,
         isUser: false,
         timestamp: new Date(),
       };
@@ -80,7 +75,24 @@ export default function AIAssistanceScreen() {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
-    }, 1500);
+    } catch (error: any) {
+      console.error('AI API Error:', error);
+      
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      setIsTyping(false);
+      
+      // Scroll to bottom after error response
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
   };
 
   const handleQuickQuestion = (question: string) => {
@@ -88,11 +100,14 @@ export default function AIAssistanceScreen() {
   };
 
   const quickQuestions = [
+    "मुझे सिरदर्द हो रहा है",
+    "बुखार के लक्षण क्या हैं?",
+    "तनाव कैसे कम करें?",
+    "अच्छी नींद के लिए क्या करें?",
+    "स्वस्थ आहार कैसे लें?",
     "What are the symptoms of common cold?",
     "How to manage stress?",
     "What should I do for better sleep?",
-    "How to maintain a healthy diet?",
-    "What are the benefits of regular exercise?",
   ];
 
   const styles = StyleSheet.create({
@@ -312,7 +327,7 @@ export default function AIAssistanceScreen() {
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.textInput}
-          placeholder="Ask me anything about health..."
+          placeholder="स्वास्थ्य के बारे में पूछें / Ask me anything about health..."
           placeholderTextColor={theme.colors.muted}
           value={inputText}
           onChangeText={setInputText}

@@ -126,6 +126,14 @@ export interface IssuesListResponse {
   issues: Issue[];
 }
 
+export interface AIPromptRequest {
+  prompt: string;
+}
+
+export interface AIPromptResponse {
+  response: string;
+}
+
 // API Service Class
 class ApiService {
   private async getToken(): Promise<string | null> {
@@ -416,6 +424,20 @@ class ApiService {
 
     return this.makeRequest<IssuesListResponse>(API_CONFIG.ENDPOINTS.ISSUE_LIST, {
       method: 'GET',
+      headers: getAuthHeaders(token),
+    });
+  }
+
+  // AI Assistant API
+  async sendAIPrompt(data: AIPromptRequest): Promise<AIPromptResponse> {
+    const token = await this.getToken();
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    return this.makeRequest<AIPromptResponse>(API_CONFIG.ENDPOINTS.AI_PROMPT, {
+      method: 'POST',
+      body: JSON.stringify(data),
       headers: getAuthHeaders(token),
     });
   }
