@@ -186,26 +186,60 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    const token = await this.getToken();
+    
+    console.log('Making multipart request to:', url);
+    console.log('Request method:', options.method || 'POST');
+    console.log('Token available:', !!token);
     
     try {
-      const response = await fetch(url, {
-        method: 'POST',
+      const requestOptions: RequestInit = {
+        method: options.method || 'POST',
         body: formData,
         ...options,
         headers: {
-          ...getMultipartAuthHeaders(await this.getToken() || ''),
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type for FormData, let the browser set it with boundary
           ...options.headers,
         },
+      };
+
+      console.log('Request options:', {
+        method: requestOptions.method,
+        headers: requestOptions.headers,
+        bodyType: typeof requestOptions.body,
       });
 
+      const response = await fetch(url, requestOptions);
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorText = await response.text();
+        console.error('Error response text:', errorText);
+        
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `HTTP error! status: ${response.status}` };
+        }
+        
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+      return responseData;
     } catch (error) {
       console.error('Multipart API request failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        url,
+        method: options.method || 'POST',
+      });
       throw error;
     }
   }
@@ -260,13 +294,23 @@ class ApiService {
     if (data.father) formData.append('father', data.father);
     if (data.mother) formData.append('mother', data.mother);
     if (data.address) formData.append('address', data.address);
+    
     if (data.profile_image) {
-      formData.append('profile_image', {
+      console.log('Adding profile image to FormData:', data.profile_image);
+      
+      // Create the file object with proper structure
+      const imageFile = {
         uri: data.profile_image.uri,
-        type: data.profile_image.type || 'image/jpeg',
-        name: data.profile_image.name || 'profile.jpg',
-      } as any);
+        type: data.profile_image.mimeType || data.profile_image.type || 'image/jpeg',
+        name: data.profile_image.fileName || data.profile_image.name || 'profile.jpg',
+      };
+      
+      console.log('Image file object:', imageFile);
+      formData.append('profile_image', imageFile as any);
     }
+
+    console.log('FormData contents:', formData);
+    console.log('Making multipart request to:', API_CONFIG.ENDPOINTS.PROFILE_UPDATE);
 
     return this.makeMultipartRequest<ProfileUpdateResponse>(
       API_CONFIG.ENDPOINTS.PROFILE_UPDATE,

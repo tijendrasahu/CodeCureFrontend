@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from '../src/theme/ThemeProvider';
+import { ProfileProvider } from '../src/context/ProfileContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -58,13 +59,15 @@ export default function Root() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          {isAuthenticated ? (
-            <Stack.Screen name="(tabs)" />
-          ) : (
-            <Stack.Screen name="auth" />
-          )}
-        </Stack>
+        <ProfileProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            {isAuthenticated ? (
+              <Stack.Screen name="(tabs)" />
+            ) : (
+              <Stack.Screen name="auth" />
+            )}
+          </Stack>
+        </ProfileProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

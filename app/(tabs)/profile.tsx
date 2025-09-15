@@ -1,33 +1,55 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ScrollView, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ScrollView, TextInput, Modal, Platform } from 'react-native';
 import { useTheme } from '../../src/theme/ThemeProvider';
+import { useProfile } from '../../src/context/ProfileContext';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService, ProfileResponse, ProfileUpdateRequest } from '../../src/services/apiService';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
-  const [profile, setProfile] = useState<ProfileResponse['profile'] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { profile, loading, refreshProfile, updateProfileImage } = useProfile();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editData, setEditData] = useState<ProfileUpdateRequest>({});
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    loadProfile();
+    checkPendingImageResult();
   }, []);
 
-  const loadProfile = async () => {
+  const checkPendingImageResult = async () => {
     try {
-      setLoading(true);
-      const response = await apiService.getProfile();
-      setProfile(response.profile);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to load profile');
-    } finally {
-      setLoading(false);
+      const result = await ImagePicker.getPendingResultAsync();
+      if (result && !result.canceled && result.assets[0]) {
+        console.log('Found pending image result:', result);
+        setEditData(prev => ({
+          ...prev,
+          profile_image: result.assets[0]
+        }));
+      }
+    } catch (error) {
+      console.log('No pending image result or error:', error);
     }
   };
+
+  const testImagePicker = async () => {
+    try {
+      console.log('Testing ImagePicker availability...');
+      console.log('ImagePicker object:', ImagePicker);
+      console.log('ImagePicker methods:', Object.keys(ImagePicker));
+      
+      // Test permission request
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('Permission test result:', status);
+      
+      Alert.alert('Test Result', `ImagePicker is working. Permission status: ${status}`);
+    } catch (error) {
+      console.error('ImagePicker test failed:', error);
+      Alert.alert('Test Failed', `ImagePicker test failed: ${error.message}`);
+    }
+  };
+
+
 
   const handleEditProfile = () => {
     setEditData({
@@ -46,7 +68,7 @@ export default function ProfileScreen() {
       setUpdating(true);
       await apiService.updateProfile(editData);
       setEditModalVisible(false);
-      await loadProfile();
+      await refreshProfile();
       Alert.alert('Success', 'Profile updated successfully');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to update profile');
@@ -57,6 +79,96 @@ export default function ProfileScreen() {
 
   const pickImage = async () => {
     try {
+      console.log('Starting image picker...');
+      Alert.alert(
+        'Select Profile Picture',
+        'Choose how you want to set your profile picture',
+        [
+          {
+            text: 'Camera',
+            onPress: () => {
+              console.log('Camera option selected');
+              takePicture();
+            },
+          },
+          {
+            text: 'Photo Library',
+            onPress: () => {
+              console.log('Photo Library option selected');
+              selectFromLibrary();
+            },
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', `Failed to open image picker: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const takePicture = async () => {
+    try {
+      console.log('Requesting camera permissions...');
+      // Request camera permissions
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      console.log('Camera permission status:', status);
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Sorry, we need camera permissions to take a profile picture.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      console.log('Launching camera...');
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      console.log('Camera result:', result);
+
+      if (!result.canceled && result.assets[0]) {
+        console.log('Setting image data:', result.assets[0]);
+        setEditData(prev => ({
+          ...prev,
+          profile_image: result.assets[0]
+        }));
+        Alert.alert('Success', 'Image selected successfully!');
+      } else {
+        console.log('Camera operation was canceled');
+      }
+    } catch (error) {
+      console.error('Camera error:', error);
+      Alert.alert('Error', `Failed to take picture: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const selectFromLibrary = async () => {
+    try {
+      console.log('Requesting media library permissions...');
+      // Request media library permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('Media library permission status:', status);
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Sorry, we need photo library permissions to select a profile picture.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      console.log('Launching image library...');
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -64,14 +176,21 @@ export default function ProfileScreen() {
         quality: 0.8,
       });
 
+      console.log('Library result:', result);
+
       if (!result.canceled && result.assets[0]) {
+        console.log('Setting image data:', result.assets[0]);
         setEditData(prev => ({
           ...prev,
           profile_image: result.assets[0]
         }));
+        Alert.alert('Success', 'Image selected successfully!');
+      } else {
+        console.log('Library operation was canceled');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
+      console.error('Library picker error:', error);
+      Alert.alert('Error', `Failed to select image: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -94,9 +213,9 @@ export default function ProfileScreen() {
       marginBottom: theme.spacing.lg,
     },
     avatar: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 100,
+      height: 100,
+      borderRadius: 50,
       marginRight: theme.spacing.md,
     },
     name: {
@@ -232,6 +351,18 @@ export default function ProfileScreen() {
       fontSize: 18,
       fontWeight: '600',
     },
+    imagePreviewContainer: {
+      marginBottom: theme.spacing.lg,
+      alignItems: 'center',
+    },
+    imagePreview: {
+      width: 150,
+      height: 150,
+      borderRadius: 75,
+      marginTop: theme.spacing.sm,
+      borderWidth: 2,
+      borderColor: theme.colors.border,
+    },
   });
 
   if (loading) {
@@ -252,10 +383,11 @@ export default function ProfileScreen() {
             <Image 
               source={{ 
                 uri: profile?.profile?.profile_image 
-                  ? `https://xbll7p88-5000.inc1.devtunnels.ms/uploads/${profile.profile.profile_image}`
-                  : 'https://randomuser.me/api/portraits/men/32.jpg' 
+                  ? `https://xbll7p88-5000.inc1.devtunnels.ms/patients/uploads/${profile.profile.profile_image}`
+                  : undefined
               }} 
               style={styles.avatar} 
+              defaultSource={require('../../assets/icon.png')}
             />
             <View>
               <Text style={styles.name}>
@@ -397,10 +529,31 @@ export default function ProfileScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-              <Ionicons name="camera" size={20} color={theme.colors.primary} />
-              <Text style={styles.imagePickerText}>Change Profile Picture</Text>
+            {editData.profile_image && (
+              <View style={styles.imagePreviewContainer}>
+                <Text style={styles.label}>Selected Image Preview</Text>
+                <Image 
+                  source={{ uri: editData.profile_image.uri }} 
+                  style={styles.imagePreview}
+                />
+              </View>
+            )}
+
+            <TouchableOpacity style={styles.imagePickerButton} onPress={selectFromLibrary}>
+              <Ionicons name="image" size={20} color={theme.colors.primary} />
+              <Text style={styles.imagePickerText}>Select from Gallery</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity style={styles.imagePickerButton} onPress={takePicture}>
+              <Ionicons name="camera" size={20} color={theme.colors.primary} />
+              <Text style={styles.imagePickerText}>Take Photo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.imagePickerButton, { backgroundColor: theme.colors.error || '#ff6b6b' }]} onPress={testImagePicker}>
+              <Ionicons name="bug" size={20} color="#fff" />
+              <Text style={[styles.imagePickerText, { color: '#fff' }]}>Test ImagePicker</Text>
+            </TouchableOpacity>
+
 
             <TouchableOpacity 
               style={[styles.updateButton, updating && styles.updateButtonDisabled]}

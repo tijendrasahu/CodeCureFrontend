@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../../src/theme/ThemeProvider';
+import { useProfile } from '../../src/context/ProfileContext';
 import { t } from '../../src/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { AppLogo } from '../../src/components/AppLogo';
@@ -11,6 +12,7 @@ import { subscribeToLocale } from '../../src/i18n';
 
 function InnerTabs() {
   const { theme } = useTheme();
+  const { profile } = useProfile();
   const [localeTick, setLocaleTick] = React.useState(0);
   React.useEffect(() => {
     const unsub = subscribeToLocale(() => setLocaleTick((x) => x + 1));
@@ -40,8 +42,13 @@ function InnerTabs() {
         headerRight: () => (
           <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
             <Image 
-              source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }} 
-              style={{ width: 28, height: 28, borderRadius: 14 }}
+              source={{ 
+                uri: profile?.profile?.profile_image 
+                  ? `https://xbll7p88-5000.inc1.devtunnels.ms/patients/uploads/${profile.profile.profile_image}`
+                  : undefined
+              }} 
+              style={{ width: 32, height: 32, borderRadius: 16 }}
+              defaultSource={require('../../assets/icon.png')}
             />
           </TouchableOpacity>
         ),
