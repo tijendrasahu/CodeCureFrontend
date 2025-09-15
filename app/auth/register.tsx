@@ -14,17 +14,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiService, RegisterRequest } from '../../src/services/apiService';
 
 export default function RegisterScreen() {
   const { theme } = useTheme();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
-    phone: '',
+    age: '',
+    dob: '',
+    sex: 'M' as 'M' | 'F',
+    mobile: '',
     password: '',
     confirmPassword: '',
+    otp: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,9 +38,9 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    const { firstName, lastName, email, phone, password, confirmPassword } = formData;
+    const { firstName, lastName, age, dob, sex, mobile, password, confirmPassword, otp } = formData;
     
-    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
+    if (!firstName || !lastName || !age || !dob || !mobile || !password || !confirmPassword || !otp) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -49,32 +52,24 @@ export default function RegisterScreen() {
     
     setLoading(true);
     try {
-      const raw = (await AsyncStorage.getItem('app_users_v1')) || '[]';
-      const users = JSON.parse(raw) as Array<any>;
-      const exists = users.some((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (exists) {
-        Alert.alert('Error', 'An account with this email already exists');
-        setLoading(false);
-        return;
-      }
-      const newUser = {
-        id: `u_${Date.now()}`,
-        firstName,
-        lastName,
-        email,
-        phone,
+      const registerData: RegisterRequest = {
+        first_name: firstName,
+        last_name: lastName,
+        age,
+        dob,
+        sex,
+        mobile,
         password,
-        avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
+        confirm_password: confirmPassword,
+        otp,
       };
-      users.push(newUser);
-      await AsyncStorage.setItem('app_users_v1', JSON.stringify(users));
-      await AsyncStorage.setItem('user_authenticated', 'true');
-      await AsyncStorage.setItem('current_user_v1', JSON.stringify(newUser));
+
+      const response = await apiService.register(registerData);
       Alert.alert('Success', 'Account created successfully!', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)') }
+        { text: 'OK', onPress: () => router.replace('/auth/login') }
       ]);
-    } catch (e) {
-      Alert.alert('Error', 'Registration failed. Please try again.');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -190,6 +185,31 @@ export default function RegisterScreen() {
       fontWeight: '600',
       marginLeft: theme.spacing.xs,
     },
+    sexContainer: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    sexButton: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.lg,
+      paddingVertical: theme.spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    sexButtonActive: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    sexButtonText: {
+      fontSize: 16,
+      color: theme.colors.text,
+      fontWeight: '500',
+    },
+    sexButtonTextActive: {
+      color: '#ffffff',
+    },
   });
 
   return (
@@ -235,28 +255,82 @@ export default function RegisterScreen() {
                 </View>
               </View>
 
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="john@example.com"
-                  placeholderTextColor={theme.colors.muted}
-                  value={formData.email}
-                  onChangeText={(value) => handleInputChange('email', value)}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+              <View style={styles.row}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Age</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="30"
+                    placeholderTextColor={theme.colors.muted}
+                    value={formData.age}
+                    onChangeText={(value) => handleInputChange('age', value)}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Date of Birth</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="1995-01-01"
+                    placeholderTextColor={theme.colors.muted}
+                    value={formData.dob}
+                    onChangeText={(value) => handleInputChange('dob', value)}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.row}>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Sex</Text>
+                  <View style={styles.sexContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.sexButton,
+                        formData.sex === 'M' && styles.sexButtonActive
+                      ]}
+                      onPress={() => handleInputChange('sex', 'M')}
+                    >
+                      <Text style={[
+                        styles.sexButtonText,
+                        formData.sex === 'M' && styles.sexButtonTextActive
+                      ]}>Male</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.sexButton,
+                        formData.sex === 'F' && styles.sexButtonActive
+                      ]}
+                      onPress={() => handleInputChange('sex', 'F')}
+                    >
+                      <Text style={[
+                        styles.sexButtonText,
+                        formData.sex === 'F' && styles.sexButtonTextActive
+                      ]}>Female</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Mobile Number</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="9876543210"
+                    placeholderTextColor={theme.colors.muted}
+                    value={formData.mobile}
+                    onChangeText={(value) => handleInputChange('mobile', value)}
+                    keyboardType="phone-pad"
+                  />
+                </View>
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Phone Number</Text>
+                <Text style={styles.label}>OTP</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="+1 234 567 8900"
+                  placeholder="4444"
                   placeholderTextColor={theme.colors.muted}
-                  value={formData.phone}
-                  onChangeText={(value) => handleInputChange('phone', value)}
-                  keyboardType="phone-pad"
+                  value={formData.otp}
+                  onChangeText={(value) => handleInputChange('otp', value)}
+                  keyboardType="numeric"
                 />
               </View>
 

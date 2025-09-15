@@ -69,6 +69,9 @@ function InnerTabs() {
             case 'submit':
               iconName = 'mic';
               break;
+            case 'issues':
+              iconName = 'chatbubbles';
+              break;
             case 'reports':
               iconName = 'document-text';
               break;
@@ -88,6 +91,7 @@ function InnerTabs() {
     >
       <Tabs.Screen name="index" options={{ title: t('nav.events') }} />
       <Tabs.Screen name="submit" options={{ title: t('nav.submitIssue') }} />
+      <Tabs.Screen name="issues" options={{ title: 'My Issues' }} />
       <Tabs.Screen name="reports" options={{ title: t('nav.reports') }} />
       <Tabs.Screen name="ai-assistance" options={{ title: t('nav.aiAssistant') }} />
       <Tabs.Screen name="video" options={{ title: t('nav.videoCall') }} />

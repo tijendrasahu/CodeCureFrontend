@@ -7,6 +7,7 @@ import { Audio } from 'expo-av';
 import { t } from '../../src/i18n';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { AppLogo } from '../../src/components/AppLogo';
+import { apiService, IssueSubmitRequest } from '../../src/services/apiService';
 
 type QueuedIssue = {
   id: string;
@@ -30,8 +31,17 @@ async function popAllFromQueue(): Promise<QueuedIssue[]> {
 }
 
 async function submitIssue(item: QueuedIssue) {
-  await new Promise((r) => setTimeout(r, 500));
-  return { ok: true };
+  const submitData: IssueSubmitRequest = {
+    text: item.text,
+    language_code: 'en-IN', // Default language, can be made configurable
+    audio: item.audioUri ? {
+      uri: item.audioUri,
+      type: 'audio/wav',
+      name: `audio_${item.id}.wav`
+    } : undefined
+  };
+  
+  return await apiService.submitIssue(submitData);
 }
 
 export default function SubmitIssueScreen() {
@@ -57,6 +67,11 @@ export default function SubmitIssueScreen() {
   }, []);
 
   const handleSubmit = async () => {
+    if (!text.trim() && !audioUriRef.current) {
+      Alert.alert('Error', 'Please enter text or record audio before submitting');
+      return;
+    }
+
     const id = Date.now().toString();
     const item: QueuedIssue = { id, text: text.trim() || undefined, audioUri: audioUriRef.current };
 
@@ -66,12 +81,21 @@ export default function SubmitIssueScreen() {
       Alert.alert('Saved offline. Will submit when online.');
       setText('');
       audioUriRef.current = undefined;
+      setHasAudio(false);
+      setRecordingDuration(0);
       return;
     }
-    await submitIssue(item);
-    Alert.alert('Submitted successfully');
-    setText('');
-    audioUriRef.current = undefined;
+    
+    try {
+      await submitIssue(item);
+      Alert.alert('Success', 'Issue submitted successfully');
+      setText('');
+      audioUriRef.current = undefined;
+      setHasAudio(false);
+      setRecordingDuration(0);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to submit issue');
+    }
   };
 
   const startRecording = async () => {

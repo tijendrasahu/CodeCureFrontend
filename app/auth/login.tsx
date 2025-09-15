@@ -14,37 +14,32 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiService, LoginRequest } from '../../src/services/apiService';
 
 export default function LoginScreen() {
   const { theme } = useTheme();
-  const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!mobile || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     setLoading(true);
     try {
-      const raw = (await AsyncStorage.getItem('app_users_v1')) || '[]';
-      const users = JSON.parse(raw) as Array<any>;
-      const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-      await new Promise((r) => setTimeout(r, 800));
-      if (!user) {
-        Alert.alert('Invalid credentials', 'Please check your email and password');
-        setLoading(false);
-        return;
-      }
-      await AsyncStorage.setItem('user_authenticated', 'true');
-      await AsyncStorage.setItem('current_user_v1', JSON.stringify(user));
+      const loginData: LoginRequest = {
+        mobile,
+        password,
+      };
+
+      await apiService.login(loginData);
       router.replace('/(tabs)');
-    } catch (e) {
-      Alert.alert('Error', 'Login failed. Please try again.');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -177,16 +172,15 @@ export default function LoginScreen() {
 
             <View style={styles.form}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>Mobile Number</Text>
                 <View style={styles.inputWrapper}>
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your email"
+                    placeholder="Enter your mobile number"
                     placeholderTextColor={theme.colors.muted}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
+                    value={mobile}
+                    onChangeText={setMobile}
+                    keyboardType="phone-pad"
                   />
                 </View>
               </View>

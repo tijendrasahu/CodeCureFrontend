@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FlatList, Text, View, StyleSheet, TouchableOpacity, ScrollView, Modal, Dimensions, Animated, Easing, Image } from 'react-native';
+import { FlatList, Text, View, StyleSheet, TouchableOpacity, ScrollView, Modal, Dimensions, Animated, Easing, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { t } from '../../src/i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import { useTheme } from '../../src/theme/ThemeProvider';
 import { Video, ResizeMode } from 'expo-av';
 import { router } from 'expo-router';
 import { AppLogo } from '../../src/components/AppLogo';
+import { apiService, Event } from '../../src/services/apiService';
 
 const mockEvents = [
   { 
@@ -70,10 +71,28 @@ const getEventColor = (type: string, theme: any) => {
 
 export default function EventsScreen() {
   const { theme } = useTheme();
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getEvents();
+      setEvents(response.events);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -253,6 +272,15 @@ export default function EventsScreen() {
       color: theme.colors.primary,
       fontWeight: '500',
     },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+    },
   });
 
   useEffect(() => {
@@ -262,12 +290,20 @@ export default function EventsScreen() {
     ]).start();
   }, []);
 
-  const handleEventPress = (event: any) => {
+  const handleEventPress = (event: Event) => {
     setSelectedEvent(event);
     setModalVisible(true);
   };
 
-  const renderEvent = ({ item, index }: { item: any; index: number }) => (
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const renderEvent = ({ item, index }: { item: Event; index: number }) => (
     <Animated.View style={[styles.eventCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <TouchableOpacity 
         style={styles.eventContent} 
@@ -276,23 +312,20 @@ export default function EventsScreen() {
       >
         <View style={styles.eventHeader}>
           <LinearGradient
-            colors={[getEventColor(item.type, theme), getEventColor(item.type, theme) + '80']}
+            colors={[theme.colors.primary, theme.colors.primary + '80']}
             style={styles.eventIcon}
           >
             <Ionicons 
-              name={getEventIcon(item.type) as any} 
+              name="calendar" 
               size={24} 
               color="#ffffff" 
             />
           </LinearGradient>
           <View style={{ flex: 1 }}>
-            <Text style={styles.eventTitle}>{t(`events.items.${item.type}.title`)}</Text>
-            <Text style={styles.eventDate}>{item.date}</Text>
+            <Text style={styles.eventTitle}>{item.title}</Text>
+            <Text style={styles.eventDate}>{formatDate(item.date)}</Text>
           </View>
         </View>
-        <Text style={styles.eventTime}>
-          <Ionicons name="time" size={14} color={theme.colors.textSecondary} /> {item.time}
-        </Text>
         <Text style={styles.eventLocation}>
           <Ionicons name="location" size={14} color={theme.colors.textSecondary} /> {item.location}
         </Text>
@@ -307,33 +340,39 @@ export default function EventsScreen() {
         <Text style={styles.subtitle}>{t('events.empty')}</Text>
       </View>
       
-      <FlatList
-        data={mockEvents}
-        keyExtractor={(item) => item.id}
-        renderItem={renderEvent}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View style={{ marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.md, borderRadius: theme.borderRadius.lg, overflow: 'hidden' }}>
-            <Video
-              source={{ uri: 'https://nhm.gov.in/images/video/mhs/HWC.mp4' }}
-              style={{ width: '100%', height: 180 }}
-              resizeMode={ResizeMode.COVER}
-              shouldPlay
-              isLooping
-              isMuted
-            />
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="calendar-outline" size={40} color={theme.colors.muted} />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading events...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={events}
+          keyExtractor={(item) => item._id}
+          renderItem={renderEvent}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <View style={{ marginHorizontal: theme.spacing.lg, marginBottom: theme.spacing.md, borderRadius: theme.borderRadius.lg, overflow: 'hidden' }}>
+              <Video
+                source={{ uri: 'https://nhm.gov.in/images/video/mhs/HWC.mp4' }}
+                style={{ width: '100%', height: 180 }}
+                resizeMode={ResizeMode.COVER}
+                shouldPlay
+                isLooping
+                isMuted
+              />
             </View>
-            <Text style={styles.emptyText}>{t('events.empty')}</Text>
-            <Text style={styles.emptySubtext}>{t('events.empty')}</Text>
-          </View>
-        }
-      />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="calendar-outline" size={40} color={theme.colors.muted} />
+              </View>
+              <Text style={styles.emptyText}>No events found</Text>
+              <Text style={styles.emptySubtext}>Check back later for upcoming health events</Text>
+            </View>
+          }
+        />
+      )}
 
       <Modal
         visible={modalVisible}
@@ -345,16 +384,16 @@ export default function EventsScreen() {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <LinearGradient
-                colors={[getEventColor(selectedEvent?.type, theme), getEventColor(selectedEvent?.type, theme) + '80']}
+                colors={[theme.colors.primary, theme.colors.primary + '80']}
                 style={styles.modalIcon}
               >
                 <Ionicons 
-                  name={getEventIcon(selectedEvent?.type) as any} 
+                  name="calendar" 
                   size={30} 
                   color="#ffffff" 
                 />
               </LinearGradient>
-              <Text style={styles.modalTitle}>{selectedEvent ? t(`events.items.${selectedEvent.type}.title`) : ''}</Text>
+              <Text style={styles.modalTitle}>{selectedEvent?.title}</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={() => setModalVisible(false)}
@@ -365,44 +404,13 @@ export default function EventsScreen() {
             
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Date & Time</Text>
-                <Text style={styles.detailValue}>{selectedEvent?.date} • {selectedEvent?.time}</Text>
+                <Text style={styles.detailLabel}>Date</Text>
+                <Text style={styles.detailValue}>{selectedEvent ? formatDate(selectedEvent.date) : ''}</Text>
               </View>
               
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Location</Text>
                 <Text style={styles.detailValue}>{selectedEvent?.location}</Text>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Description</Text>
-                <Text style={styles.detailValue}>{selectedEvent ? t(`events.items.${selectedEvent.type}.description`) : ''}</Text>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Services Offered</Text>
-                <View style={styles.servicesList}>
-                  {(selectedEvent?.services || []).map((service: string, index: number) => (
-                    <View key={index} style={styles.serviceTag}>
-                      <Text style={styles.serviceText}>{t(`events.items.${selectedEvent?.type}.services.${index}`)}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Organizer</Text>
-                <Text style={styles.detailValue}>{selectedEvent?.organizer}</Text>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Contact</Text>
-                <Text style={styles.detailValue}>{selectedEvent?.contact}</Text>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Requirements</Text>
-                <Text style={styles.detailValue}>{selectedEvent?.requirements}</Text>
               </View>
             </ScrollView>
           </View>

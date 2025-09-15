@@ -1,76 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FlatList, Text, TouchableOpacity, View, ScrollView, Modal, Dimensions, Alert, Linking } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { t } from '../../src/i18n';
 import { AppLogo } from '../../src/components/AppLogo';
-
-const mockReports = [
-  { 
-    id: 'r1', 
-    name: 'reports.files.bloodTest', 
-    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    type: 'pdf',
-    date: '2024-01-15',
-    size: '2.3 MB'
-  },
-  { 
-    id: 'r2', 
-    name: 'reports.files.chestXray', 
-    url: 'https://via.placeholder.com/800x600/4A90E2/FFFFFF?text=Chest+X-Ray',
-    type: 'image',
-    date: '2024-01-10',
-    size: '1.8 MB'
-  },
-  { 
-    id: 'r3', 
-    name: 'reports.files.mriScan', 
-    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    type: 'pdf',
-    date: '2024-01-08',
-    size: '3.1 MB'
-  },
-  { 
-    id: 'r4', 
-    name: 'reports.files.ecg', 
-    url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    type: 'pdf',
-    date: '2024-01-05',
-    size: '1.2 MB'
-  },
-];
+import { apiService, Report } from '../../src/services/apiService';
+import * as DocumentPicker from 'expo-document-picker';
 
 export default function ReportsScreen() {
   const { theme } = useTheme();
-  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const getFileIcon = (type: string) => {
-    return type === 'pdf' ? 'document-text' : 'image';
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const loadReports = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getReports();
+      setReports(response.reports);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to load reports');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getFileColor = (type: string) => {
-    return type === 'pdf' ? theme.colors.error : theme.colors.success;
+  const handleUploadReport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploading(true);
+        await apiService.uploadReport(result.assets[0]);
+        Alert.alert('Success', 'Report uploaded successfully');
+        await loadReports();
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to upload report');
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleReportPress = (report: any) => {
+  const getFileIcon = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    return extension === 'pdf' ? 'document-text' : 'image';
+  };
+
+  const getFileColor = (filename: string) => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    return extension === 'pdf' ? theme.colors.error : theme.colors.success;
+  };
+
+  const handleReportPress = (report: Report) => {
     setSelectedReport(report);
     setModalVisible(true);
   };
 
-  const handleDownload = async (report: any) => {
+  const handleDownload = async (report: Report) => {
     try {
-      const supported = await Linking.canOpenURL(report.url);
-      if (supported) {
-        await Linking.openURL(report.url);
-        Alert.alert('Download Started', 'The report will be downloaded to your device.');
-      } else {
-        Alert.alert('Error', 'Cannot open this file type.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to download the report.');
+      const blob = await apiService.downloadReport(report.filename);
+      // For now, we'll show an alert. In a real app, you'd save the file
+      Alert.alert('Download', `Report ${report.original_name} downloaded successfully`);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to download the report.');
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
 
   const styles = {
@@ -214,6 +222,49 @@ export default function ReportsScreen() {
       color: theme.colors.muted,
       textAlign: 'center' as const,
     },
+    uploadButton: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.lg,
+      paddingHorizontal: theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
+      marginTop: theme.spacing.md,
+      alignSelf: 'flex-start',
+    },
+    uploadButtonDisabled: {
+      opacity: 0.6,
+    },
+    uploadButtonText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '600' as const,
+      marginLeft: theme.spacing.sm,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+    },
+    loadingText: {
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+    },
+    reportInfo: {
+      padding: theme.spacing.lg,
+    },
+    reportDetailLabel: {
+      fontSize: 16,
+      fontWeight: '600' as const,
+      color: theme.colors.text,
+      marginBottom: theme.spacing.xs,
+      marginTop: theme.spacing.md,
+    },
+    reportDetailValue: {
+      fontSize: 14,
+      color: theme.colors.textSecondary,
+      marginBottom: theme.spacing.sm,
+    },
   };
 
   return (
@@ -222,46 +273,63 @@ export default function ReportsScreen() {
         <AppLogo size="medium" />
         <Text style={styles.title}>{t('reports.title')}</Text>
         <Text style={styles.subtitle}>{t('app.title')}</Text>
+        
+        <TouchableOpacity 
+          style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
+          onPress={handleUploadReport}
+          disabled={uploading}
+        >
+          <Ionicons name="cloud-upload" size={20} color="#ffffff" />
+          <Text style={styles.uploadButtonText}>
+            {uploading ? 'Uploading...' : 'Upload Report'}
+          </Text>
+        </TouchableOpacity>
       </View>
       
-      <FlatList
-        data={mockReports}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.reportCard}>
-            <TouchableOpacity 
-              style={styles.reportContent} 
-              activeOpacity={0.8}
-              onPress={() => handleReportPress(item)}
-            >
-              <View style={styles.reportHeader}>
-                <View style={[styles.reportIcon, { backgroundColor: getFileColor(item.type) + '20' }]}>
-                  <Ionicons 
-                    name={getFileIcon(item.type) as any} 
-                    size={24} 
-                    color={getFileColor(item.type)} 
-                  />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading reports...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={reports}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => (
+            <View style={styles.reportCard}>
+              <TouchableOpacity 
+                style={styles.reportContent} 
+                activeOpacity={0.8}
+                onPress={() => handleReportPress(item)}
+              >
+                <View style={styles.reportHeader}>
+                  <View style={[styles.reportIcon, { backgroundColor: getFileColor(item.filename) + '20' }]}>
+                    <Ionicons 
+                      name={getFileIcon(item.filename) as any} 
+                      size={24} 
+                      color={getFileColor(item.filename)} 
+                    />
+                  </View>
+                  <View style={styles.reportInfo}>
+                    <Text style={styles.reportName}>{item.original_name}</Text>
+                    <Text style={styles.reportMeta}>{formatDate(item.uploaded_at)}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
                 </View>
-                <View style={styles.reportInfo}>
-                  <Text style={styles.reportName}>{t(item.name)}</Text>
-                  <Text style={styles.reportMeta}>{item.date} • {item.size}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="document-outline" size={40} color={theme.colors.muted} />
+              </TouchableOpacity>
             </View>
-            <Text style={styles.emptyText}>{t('reports.empty')}</Text>
-            <Text style={styles.emptySubtext}>{t('app.title')}</Text>
-          </View>
-        }
-      />
+          )}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="document-outline" size={40} color={theme.colors.muted} />
+              </View>
+              <Text style={styles.emptyText}>No reports found</Text>
+              <Text style={styles.emptySubtext}>Upload your first report to get started</Text>
+            </View>
+          }
+        />
+      )}
 
       <Modal
         visible={modalVisible}
@@ -272,7 +340,7 @@ export default function ReportsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{selectedReport?.name}</Text>
+              <Text style={styles.modalTitle}>{selectedReport?.original_name}</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={() => setModalVisible(false)}
@@ -282,21 +350,19 @@ export default function ReportsScreen() {
             </View>
             
             <View style={styles.modalContent}>
-              <View style={styles.webViewContainer}>
-                <WebView
-                  source={{ uri: selectedReport?.url }}
-                  style={{ flex: 1 }}
-                  onError={(error) => {
-                    console.log('WebView error:', error);
-                  }}
-                />
+              <View style={styles.reportInfo}>
+                <Text style={styles.reportDetailLabel}>Filename:</Text>
+                <Text style={styles.reportDetailValue}>{selectedReport?.filename}</Text>
+                
+                <Text style={styles.reportDetailLabel}>Uploaded:</Text>
+                <Text style={styles.reportDetailValue}>{selectedReport ? formatDate(selectedReport.uploaded_at) : ''}</Text>
               </View>
             </View>
             
             <View style={styles.actionButtons}>
               <TouchableOpacity 
                 style={styles.downloadButton}
-                onPress={() => handleDownload(selectedReport)}
+                onPress={() => selectedReport && handleDownload(selectedReport)}
               >
                 <Text style={styles.downloadButtonText}>Download Report</Text>
               </TouchableOpacity>
